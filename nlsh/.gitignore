@@ -1,0 +1,17 @@
+# Ignore virtual environments
+venv/
+.env/
+*.pyc
+__pycache__/
+.ipynb_checkpoints/
+
+# Ignore logs
+*.log
+
+# Ignore build artifacts
+*.pth
+*.bin
+*.npz
+
+# OS files
+.DS_Store
