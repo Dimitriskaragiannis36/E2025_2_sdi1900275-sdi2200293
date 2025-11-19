@@ -65,6 +65,3 @@ def build_and_load_knn_graph(dataset_type, k=10, method="ivfflat",
     csv_path = run_ann_knn(dataset_type, k, method, ann_exec, input_path)
     graph = load_knn_graph_from_csv(csv_path)
     return graph, csv_path
-
-
-
