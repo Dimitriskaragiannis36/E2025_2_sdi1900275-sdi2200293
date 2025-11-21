@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import argparse
 import os
 import shutil
@@ -45,7 +44,7 @@ def main():
 
     print(f"✔ Using ANN executable: {args.exec}")
 
-    # --- Step 1: Build kNN graph ---
+    #βήμα 1: Κατασκευή KNN γράφου
     graph, csv_path = build_and_load_knn_graph(
         dataset_type=args.dataset,
         k=args.k,
@@ -55,7 +54,7 @@ def main():
     print(" CSV produced at:", csv_path)
     print(" Nodes loaded:", len(graph))
 
-    # --- Step 2: KaHIP partitioning ---
+    #Βήμα 2: Κατανομή γράφου με KaHIP
     print("Running KaHIP partitioning...")
     blocks, parts_map, meta = partition_knn_graph(
         graph,

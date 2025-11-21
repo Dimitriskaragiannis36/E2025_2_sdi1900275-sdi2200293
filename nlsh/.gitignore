@@ -1,17 +1,17 @@
-# Ignore virtual environments
+#αγνόησε το περιεχόμενο των παρακάτω αρχείων και φακέλων
 venv/
 .env/
 *.pyc
-__pycache__/
+**/__pycache__/
 .ipynb_checkpoints/
 
-# Ignore logs
+#αγνόησε αρχεία καταγραφής
 *.log
 
-# Ignore build artifacts
+#αγνόησε αρχεία δεδομένων
 *.pth
 *.bin
 *.npz
 
-# OS files
+#αγνόησε συστήματα λειτουργίας
 .DS_Store

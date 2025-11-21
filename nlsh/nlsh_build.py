@@ -1,5 +1,6 @@
 import subprocess
 import os
+from io_utils.graph_utils import load_knn_graph_from_csv
 
 def run_ann_knn(dataset_type, k, method="ivfflat",
                 ann_exec="./bin/search",
@@ -14,10 +15,10 @@ def run_ann_knn(dataset_type, k, method="ivfflat",
         input_path = f"data/{dataset_type}/input.dat"
     input_path = os.path.abspath(input_path)
 
-    # Προσαρμογή ονόματος εξόδου CSV
+    #προσαρμογή ονόματος εξόδου CSV
     output_knn = os.path.abspath(f"knn_graph_{dataset_type}.csv")
 
-    # ----- DEFAULT PARAMS from E1 -----
+    #από την εργασία 1, παράμετροι για κάθε μέθοδο
     METHOD_PARAMS = {
         "lsh":      ["-k", "4", "-L", "5", "-w", "4.0"],
         "hypercube": ["-kproj", "14", "-w", "4", "-M", "10", "-probes", "2"],
@@ -38,7 +39,7 @@ def run_ann_knn(dataset_type, k, method="ivfflat",
     cmd = [
         ann_exec,
         "-d", input_path,
-        "-q", input_path,   # self-query
+        "-q", input_path,   
         "-N", str(k),
         "-type", dataset_type,
         method_flag,
@@ -47,14 +48,12 @@ def run_ann_knn(dataset_type, k, method="ivfflat",
     ] + METHOD_PARAMS[method]
 
     if knn_graph:
-        cmd.append("-knngraph")   # ενεργοποίηση KNN graph mode
+        cmd.append("-knngraph")   #ενεργοποίηση KNN graph mode
 
     print("Running:", " ".join(cmd))
     subprocess.run(cmd, check=True)
 
     return output_knn
-
-from graph_utils import load_knn_graph_from_csv
 
 def build_and_load_knn_graph(dataset_type, k=10, method="ivfflat",
                              ann_exec="./bin/search", input_path=None):
