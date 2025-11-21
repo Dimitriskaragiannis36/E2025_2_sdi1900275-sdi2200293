@@ -2,7 +2,7 @@ import argparse
 import os
 import shutil
 from nlsh_build import build_and_load_knn_graph
-from kahip_wrapper import partition_knn_graph
+from graphs.kahip_wrapper import partition_knn_graph
 
 
 def autodetect_exec():

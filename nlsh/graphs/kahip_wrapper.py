@@ -2,8 +2,8 @@
 KaHIP wrapper that uses graph_processing and csr_utils.
 """
 from collections import defaultdict
-import graph_processing as gp
-import csr_utils as cu  
+import graphs.graph_processing as gp
+import graphs.csr_utils as cu  
 
 def _ensure_kahip():
     try:
