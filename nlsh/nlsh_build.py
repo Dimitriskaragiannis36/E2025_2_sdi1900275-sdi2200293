@@ -1,66 +1,79 @@
-import subprocess
+import argparse
 import os
-from io_utils.graph_utils import load_knn_graph_from_csv
+import shutil
+from pathlib import Path
 
-def run_ann_knn(dataset_type, k, method="ivfflat",
-                ann_exec="./bin/search",
-                input_path=None,
-                knn_graph=True):
+from graphs.knn_builder import build_and_load_knn_graph
 
-    ann_exec = os.path.abspath(ann_exec)
-    if not os.path.exists(ann_exec):
-        raise FileNotFoundError(f"Executable not found: {ann_exec}")
 
-    if input_path is None:
-        input_path = f"data/{dataset_type}/input.dat"
-    input_path = os.path.abspath(input_path)
-
-    #προσαρμογή ονόματος εξόδου CSV
-    output_knn = os.path.abspath(f"knn_graph_{dataset_type}.csv")
-
-    #από την εργασία 1, παράμετροι για κάθε μέθοδο
-    METHOD_PARAMS = {
-        "lsh":      ["-k", "4", "-L", "5", "-w", "4.0"],
-        "hypercube": ["-kproj", "14", "-w", "4", "-M", "10", "-probes", "2"],
-        "ivfflat": ["-kclusters", "50", "-nprobe", "5"],
-        "ivfpq":   ["-kclusters", "50", "-nprobe", "5", "-M", "16", "-nbits", "8"]
-    }
-
-    if method not in METHOD_PARAMS:
-        raise ValueError("Unknown method " + method)
-
-    method_flag = {
-        "lsh": "-lsh",
-        "hypercube": "-hypercube",
-        "ivfflat": "-ivfflat",
-        "ivfpq": "-ivfpq"
-    }[method]
-
-    cmd = [
-        ann_exec,
-        "-d", input_path,
-        "-q", input_path,   
-        "-N", str(k),
-        "-type", dataset_type,
-        method_flag,
-        "-range", "false",
-        "-seed", "1"
-    ] + METHOD_PARAMS[method]
-
-    if knn_graph:
-        cmd.append("-knngraph")   #ενεργοποίηση KNN graph mode
-
-    print("Running:", " ".join(cmd))
-    subprocess.run(cmd, check=True)
-
-    return output_knn
-
-def build_and_load_knn_graph(dataset_type, k=10, method="ivfflat",
-                             ann_exec="./bin/search", input_path=None):
+def autodetect_exec():
     """
-    Τρέχει το search από την Εργασία 1, παράγει το CSV,
-    και το φορτώνει σε Python ως dict.
+    Βρίσκει το search executable αυτόματα.
     """
-    csv_path = run_ann_knn(dataset_type, k, method, ann_exec, input_path)
-    graph = load_knn_graph_from_csv(csv_path)
-    return graph, csv_path
+    candidates = [
+        "./bin/search",
+        "bin/search",
+        "../bin/search",
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            return os.path.abspath(c)
+
+    home = os.path.expanduser("~")
+    for root, dirs, files in os.walk(home):
+        if "search" in files:
+            return os.path.join(root, "search")
+
+    found = shutil.which("search")
+    if found:
+        return found
+
+    return None
+
+
+def build_pipeline(dataset_type, k, method, ann_exec):
+
+    print(f"=== [1] Building kNN graph for dataset: {dataset_type} ===")
+    graph, csv_path = build_and_load_knn_graph(
+        dataset_type=dataset_type,
+        k=k,
+        method=method,
+        ann_exec=ann_exec
+    )
+
+    print("✓ KNN graph built:", csv_path)
+    print("✓ Graph size:", len(graph))
+
+    print("=== Pipeline finished ===")
+    return graph
+
+
+def main():
+
+    parser = argparse.ArgumentParser(description="NLSH build pipeline")
+    parser.add_argument("--dataset", required=True, choices=["mnist", "sift"])
+    parser.add_argument("--k", type=int, default=10)
+    parser.add_argument("--method", type=str, default="ivfflat")
+
+    #αυτόματη ανίχνευση του εκτελέσιμου αρχείου
+    parser.add_argument("--ann_exec", type=str, default=autodetect_exec())
+
+    args = parser.parse_args()
+
+    #έλεγχος αν βρέθηκε το εκτελέσιμο αρχείο
+    if args.ann_exec is None:
+        print("ERROR: Could not locate 'search' executable.")
+        exit(1)
+
+    print(f"✔ Using ANN executable: {args.ann_exec}")
+
+    build_pipeline(
+        dataset_type=args.dataset,
+        k=args.k,
+        method=args.method,
+        ann_exec=args.ann_exec
+    )
+
+
+if __name__ == "__main__":
+    main()
