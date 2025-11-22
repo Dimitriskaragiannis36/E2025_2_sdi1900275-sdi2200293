@@ -1,109 +1,6 @@
 import argparse
-import os
-import shutil
-from pathlib import Path
-
-from graphs.knn_builder import build_and_load_knn_graph
-from graphs.kahip_wrapper import partition_knn_graph
-from io_utils.index_writer import write_partitions_file, write_inverted_csv, write_meta
-
-from models.classifier import MLPClassifier, train
-from io_utils.dataset_parser import load_dataset
-import torch
-from torch.utils.data import TensorDataset, DataLoader
-
-def autodetect_exec():
-    """
-    Βρίσκει το search executable αυτόματα.
-    """
-    candidates = [
-        "./bin/search",
-        "bin/search",
-        "../bin/search",
-    ]
-    for c in candidates:
-        if os.path.exists(c):
-            return os.path.abspath(c)
-
-    home = os.path.expanduser("~")
-    for root, dirs, files in os.walk(home):
-        if "search" in files:
-            return os.path.join(root, "search")
-
-    found = shutil.which("search")
-    if found:
-        return found
-
-    return None
-
-
-def build_pipeline(dataset_type, k, method, ann_exec, nblocks=8, imbalance=0.03):
-    print(f"=== [1] Building kNN graph for dataset: {dataset_type} ===")
-    graph, csv_path = build_and_load_knn_graph(
-        dataset_type=dataset_type,
-        k=k,
-        method=method,
-        ann_exec=ann_exec
-    )
-
-    print("✓ KNN graph built:", csv_path)
-    print("✓ Graph size:", len(graph))
-
-    print(f"=== [2] Running KaHIP partitioning into {nblocks} blocks ===")
-
-    blocks, parts_map, meta = partition_knn_graph(
-        graph,
-        nblocks=nblocks,
-        imbalance=imbalance,
-        mode=1,
-        seed=1,
-        write_prefix=None 
-    )
-
-    print("✓ KaHIP completed!")
-    print("Edgecut:", meta["edgecut"])
-    print("Blocks:", len(parts_map))
-
-    out_dir = Path(f"data/{dataset_type}/kahip")
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    print("=== [3] Saving index files ===")
-
-    write_partitions_file(blocks, out_dir / "partitions.txt")
-    write_inverted_csv(parts_map, out_dir / "inverted.csv")
-    write_meta(meta, out_dir / "meta.json")
-
-    print("✓ Index files written to:", out_dir)
-
-    print("=== [4] Training Neural LSH classifier ===")
-
-    #φόρτωση dataset
-    X = load_dataset(dataset_type, split="input", max_items=len(blocks))
-
-    #προετοιμασία δεδομένων για PyTorch
-    X_t = torch.tensor(X, dtype=torch.float32)
-    y_t = torch.tensor(blocks, dtype=torch.long)
-
-    print("Blocks length:", len(blocks))
-    print("X shape:", X.shape)
-
-    dataset = TensorDataset(X_t, y_t)
-    loader = DataLoader(dataset, batch_size=64, shuffle=True)
-
-    print(f"Training samples: {len(dataset)}   dims={X.shape[1]}   classes={nblocks}")
-
-    model = MLPClassifier(in_dim=X.shape[1], out_dim=nblocks)
-
-    train(model, loader, epochs=10, lr=1e-3, device="cpu")
-
-    #αποθήκευση μοντέλου
-    model_path = out_dir / "model.pth"
-    torch.save(model.state_dict(), model_path)
-    print("✓ Saved classifier model at:", model_path)
-
-    print("=== Pipeline finished ===")
-    return graph, blocks, parts_map
-
+from io_utils.exec_finder import autodetect_exec
+from pipeline.builder import build_pipeline
 
 def main():
 
@@ -111,17 +8,12 @@ def main():
     parser.add_argument("--dataset", required=True, choices=["mnist", "sift"])
     parser.add_argument("--k", type=int, default=10)
     parser.add_argument("--method", type=str, default="ivfflat")
-
-    #αυτόματη ανίχνευση του εκτελέσιμου αρχείου
     parser.add_argument("--ann_exec", type=str, default=autodetect_exec())
-
-    #παράμετροι KaHIP
     parser.add_argument("--nblocks", type=int, default=8)
     parser.add_argument("--imbalance", type=float, default=0.03)
 
     args = parser.parse_args()
 
-    #έλεγχος αν βρέθηκε το εκτελέσιμο αρχείο
     if args.ann_exec is None:
         print("ERROR: Could not locate 'search' executable.")
         exit(1)
@@ -134,8 +26,8 @@ def main():
         method=args.method,
         ann_exec=args.ann_exec,
         nblocks=args.nblocks,
-        imbalance=args.imbalance
-        )
+        imbalance=args.imbalance,
+    )
 
 if __name__ == "__main__":
     main()
