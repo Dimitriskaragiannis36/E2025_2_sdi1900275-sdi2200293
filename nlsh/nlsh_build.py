@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 
 from graphs.knn_builder import build_and_load_knn_graph
-
+from graphs.kahip_wrapper import partition_knn_graph
 
 def autodetect_exec():
     """
@@ -31,8 +31,7 @@ def autodetect_exec():
     return None
 
 
-def build_pipeline(dataset_type, k, method, ann_exec):
-
+def build_pipeline(dataset_type, k, method, ann_exec, nblocks=8, imbalance=0.03):
     print(f"=== [1] Building kNN graph for dataset: {dataset_type} ===")
     graph, csv_path = build_and_load_knn_graph(
         dataset_type=dataset_type,
@@ -44,8 +43,23 @@ def build_pipeline(dataset_type, k, method, ann_exec):
     print("✓ KNN graph built:", csv_path)
     print("✓ Graph size:", len(graph))
 
+    print(f"=== [2] Running KaHIP partitioning into {nblocks} blocks ===")
+
+    blocks, parts_map, meta = partition_knn_graph(
+        graph,
+        nblocks=nblocks,
+        imbalance=imbalance,
+        mode=1,
+        seed=1,
+        write_prefix=f"data/{dataset_type}/kahip"
+    )
+
+    print("✓ KaHIP completed!")
+    print("Edgecut:", meta["edgecut"])
+    print("Blocks:", len(parts_map))
+
     print("=== Pipeline finished ===")
-    return graph
+    return graph, blocks, parts_map
 
 
 def main():
@@ -57,6 +71,10 @@ def main():
 
     #αυτόματη ανίχνευση του εκτελέσιμου αρχείου
     parser.add_argument("--ann_exec", type=str, default=autodetect_exec())
+
+    #παράμετροι KaHIP
+    parser.add_argument("--nblocks", type=int, default=8)
+    parser.add_argument("--imbalance", type=float, default=0.03)
 
     args = parser.parse_args()
 
@@ -71,9 +89,10 @@ def main():
         dataset_type=args.dataset,
         k=args.k,
         method=args.method,
-        ann_exec=args.ann_exec
-    )
-
+        ann_exec=args.ann_exec,
+        nblocks=args.nblocks,
+        imbalance=args.imbalance
+        )
 
 if __name__ == "__main__":
     main()
