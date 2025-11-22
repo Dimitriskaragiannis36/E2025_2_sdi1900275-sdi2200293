@@ -10,10 +10,10 @@ for csv_file in root.rglob("*.csv"):
     print(f"Deleting {csv_file}")
     csv_file.unlink()
 
-#διαγράφει όλα τα kahip subfolders με περιεχόμενά τους
-for kahip_dir in root.rglob("kahip"):
-    if kahip_dir.is_dir():
-        print(f"Deleting folder {kahip_dir}")
-        shutil.rmtree(kahip_dir)
+#διαγράφει όλα τα nlsh_index subfolders με περιεχόμενά τους
+for nlsh_index_dir in root.rglob("nlsh_index"):
+    if nlsh_index_dir.is_dir():
+        print(f"Deleting folder {nlsh_index_dir}")
+        shutil.rmtree(nlsh_index_dir)
 
 print("Cleanup completed.")

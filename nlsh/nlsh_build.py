@@ -2,32 +2,67 @@ import argparse
 from io_utils.exec_finder import autodetect_exec
 from pipeline.builder import build_pipeline
 
+
 def main():
 
     parser = argparse.ArgumentParser(description="NLSH build pipeline")
-    parser.add_argument("--dataset", required=True, choices=["mnist", "sift"])
-    parser.add_argument("--k", type=int, default=10)
-    parser.add_argument("--method", type=str, default="ivfflat")
-    parser.add_argument("--ann_exec", type=str, default=autodetect_exec())
-    parser.add_argument("--nblocks", type=int, default=8)
+
+    # --- βασικά flags της εκφώνησης ---
+    parser.add_argument("-d", "--data", required=True,
+                        help="Input dataset file (e.g., input.dat)")
+    parser.add_argument("-i", "--index_path", required=True,
+                        help="Output index path (e.g., nlsh_index)")
+    parser.add_argument("-type", required=True, choices=["mnist", "sift"],
+                        help="Dataset type")
+
+    # --- παράμετροι kNN ---
+    parser.add_argument("--knn", type=int, default=10)
+
+    # --- KaHIP parameters ---
+    parser.add_argument("-m", "--nblocks", type=int, default=100)
     parser.add_argument("--imbalance", type=float, default=0.03)
+    parser.add_argument("--kahip_mode", type=int, default=2)
+
+    # --- MLP parameters ---
+    parser.add_argument("--layers", type=int, default=3)
+    parser.add_argument("--nodes", type=int, default=64)
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--batch_size", type=int, default=128)
+    parser.add_argument("--lr", type=float, default=0.001)
+    parser.add_argument("--seed", type=int, default=1)
 
     args = parser.parse_args()
 
-    if args.ann_exec is None:
-        print("ERROR: Could not locate 'search' executable.")
+    # ------------------------------------------------------
+    #  ΑΥΤΟΜΑΤΗ ΑΝΙΧΝΕΥΣΗ ANN EXECUTABLE (χωρίς flag)
+    # ------------------------------------------------------
+    ann_exec = autodetect_exec()
+    if ann_exec is None:
+        print("ERROR: Could not locate the ANN 'search' executable.")
+        print("Make sure it exists (e.g., ./bin/search).")
         exit(1)
 
-    print(f"✔ Using ANN executable: {args.ann_exec}")
+    print(f"✔ Using ANN executable from nlsh_build.py: {ann_exec}")
 
+    # ------------------------------------------------------
+    #           Πλήρης κλήση pipeline
+    # ------------------------------------------------------
     build_pipeline(
-        dataset_type=args.dataset,
-        k=args.k,
-        method=args.method,
-        ann_exec=args.ann_exec,
+        dataset_type=args.type,
+        dataset_path=args.data,
+        index_path=args.index_path,
+        k=args.knn,
         nblocks=args.nblocks,
         imbalance=args.imbalance,
+        kahip_mode=args.kahip_mode,
+        layers=args.layers,
+        nodes=args.nodes,
+        epochs=args.epochs,
+        batch_size=args.batch_size,
+        lr=args.lr,
+        seed=args.seed,
     )
+
 
 if __name__ == "__main__":
     main()
