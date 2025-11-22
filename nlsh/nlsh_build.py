@@ -69,16 +69,37 @@ def build_pipeline(dataset_type, k, method, ann_exec, nblocks=8, imbalance=0.03)
 
     print("=== [3] Saving index files ===")
 
-    #κόμβοι -> διαμέριση
     write_partitions_file(blocks, out_dir / "partitions.txt")
-
-    #αντεστραμμένος πίνακας διαμερίσεων
     write_inverted_csv(parts_map, out_dir / "inverted.csv")
-
-    #μεταδεδομένα
     write_meta(meta, out_dir / "meta.json")
 
     print("✓ Index files written to:", out_dir)
+
+    print("=== [4] Training Neural LSH classifier ===")
+
+    #φόρτωση dataset
+    X = load_dataset(dataset_type, split="input", max_items=len(blocks))
+
+    #προετοιμασία δεδομένων για PyTorch
+    X_t = torch.tensor(X, dtype=torch.float32)
+    y_t = torch.tensor(blocks, dtype=torch.long)
+
+    print("Blocks length:", len(blocks))
+    print("X shape:", X.shape)
+
+    dataset = TensorDataset(X_t, y_t)
+    loader = DataLoader(dataset, batch_size=64, shuffle=True)
+
+    print(f"Training samples: {len(dataset)}   dims={X.shape[1]}   classes={nblocks}")
+
+    model = MLPClassifier(in_dim=X.shape[1], out_dim=nblocks)
+
+    train(model, loader, epochs=10, lr=1e-3, device="cpu")
+
+    #αποθήκευση μοντέλου
+    model_path = out_dir / "model.pth"
+    torch.save(model.state_dict(), model_path)
+    print("✓ Saved classifier model at:", model_path)
 
     print("=== Pipeline finished ===")
     return graph, blocks, parts_map

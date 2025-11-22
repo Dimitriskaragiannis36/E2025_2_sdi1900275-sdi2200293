@@ -6,21 +6,36 @@ def load_mnist(path: str, max_images: int = -1, normalize: bool = True):
     if not path.exists():
         raise FileNotFoundError(f"MNIST file not found: {path}")
 
+    #διάβασε το δυαδικό αρχείο
     data = np.fromfile(path, dtype=np.uint8)
 
-    if data.size % (28*28) != 0:
-        raise ValueError(f"Corrupted MNIST file: size {data.size} is not divisible by 28*28.")
+    #έλεγχος εγκυρότητας αρχείου
+    if data.size < 16:
+        raise ValueError("MNIST file too small.")
 
-    total_images = data.size // (28*28)
-    count = total_images if max_images < 0 else min(max_images, total_images)
+    magic, num, rows, cols = data[:16].view(">u4")
 
-    data = data[:count*28*28].reshape(count, 28*28).astype(np.float32)
+    if magic != 2051:
+        raise ValueError(f"Invalid MNIST magic: {magic}")
+
+    dim = rows * cols
+
+    pixel_data = data[16:]
+
+    if pixel_data.size != num * dim:
+        raise ValueError(
+            f"Corrupted MNIST: expected {num*dim} pixels, found {pixel_data.size}"
+        )
+
+    count = num if max_images < 0 else min(max_images, num)
+
+    pixel_data = pixel_data[:count * dim]
+    arr = pixel_data.reshape(count, dim).astype(np.float32)
 
     if normalize:
-        data /= 255.0
+        arr /= 255.0
 
-    return data
-
+    return arr
 
 def load_sift(path: str, max_vectors: int = -1, expected_dim: int = 128):
     vectors = []
