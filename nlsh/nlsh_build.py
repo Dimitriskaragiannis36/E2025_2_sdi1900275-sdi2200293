@@ -5,6 +5,12 @@ from pathlib import Path
 
 from graphs.knn_builder import build_and_load_knn_graph
 from graphs.kahip_wrapper import partition_knn_graph
+from io_utils.index_writer import write_partitions_file, write_inverted_csv, write_meta
+
+from models.classifier import MLPClassifier, train
+from io_utils.dataset_parser import load_dataset
+import torch
+from torch.utils.data import TensorDataset, DataLoader
 
 def autodetect_exec():
     """
@@ -51,12 +57,28 @@ def build_pipeline(dataset_type, k, method, ann_exec, nblocks=8, imbalance=0.03)
         imbalance=imbalance,
         mode=1,
         seed=1,
-        write_prefix=f"data/{dataset_type}/kahip"
+        write_prefix=None 
     )
 
     print("✓ KaHIP completed!")
     print("Edgecut:", meta["edgecut"])
     print("Blocks:", len(parts_map))
+
+    out_dir = Path(f"data/{dataset_type}/kahip")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    print("=== [3] Saving index files ===")
+
+    #κόμβοι -> διαμέριση
+    write_partitions_file(blocks, out_dir / "partitions.txt")
+
+    #αντεστραμμένος πίνακας διαμερίσεων
+    write_inverted_csv(parts_map, out_dir / "inverted.csv")
+
+    #μεταδεδομένα
+    write_meta(meta, out_dir / "meta.json")
+
+    print("✓ Index files written to:", out_dir)
 
     print("=== Pipeline finished ===")
     return graph, blocks, parts_map
