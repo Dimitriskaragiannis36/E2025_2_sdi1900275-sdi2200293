@@ -16,9 +16,10 @@ def _ensure_kahip():
         )
 
 def call_kahip(xadj, adjncy, adjcwgt, vwgt,
-               nblocks, imbalance=0.03, mode=1, seed=1, suppress_output=True):
+               nblocks, imbalance, kahip_mode, seed, suppress_output=True):
 
     kahip = _ensure_kahip()
+    print("DEBUG: kahip_mode =", kahip_mode)
 
     xadj_i = [int(x) for x in xadj]
     adjncy_i = [int(x) for x in adjncy]
@@ -28,36 +29,29 @@ def call_kahip(xadj, adjncy, adjcwgt, vwgt,
     edgecut, blocks = kahip.kaffpa(
         vwgt_i, xadj_i, adjcwgt_i, adjncy_i,
         int(nblocks), float(imbalance),
-        bool(suppress_output), int(seed), int(mode)
+        bool(suppress_output), int(seed), int(kahip_mode)
     )
 
     return edgecut, blocks
 
 
-def partition_knn_graph(graph, nblocks=100, imbalance=0.03, mode=1, seed=1, write_prefix=None, n_nodes=None):
-    if n_nodes is None:
-        n_nodes = gp._detect_n_nodes(graph)
-    adj = gp.build_symmetric_weighted_adj_from_directed(graph, n_nodes=n_nodes)
+def partition_knn_graph(graph, nblocks, imbalance, kahip_mode, seed, nodes):
+    if nodes is None:
+        nodes = gp._detect_n_nodes(graph)
+    print("DEBUG: nodes =", nodes)
+    print("DEBUG: seed =", seed)
+    adj = gp.build_symmetric_weighted_adj_from_directed(graph, nodes)
     xadj, adjncy, adjcwgt, vwgt = cu.adj_to_csr(adj)
-    edgecut, blocks = call_kahip(xadj, adjncy, adjcwgt, vwgt, nblocks, imbalance, mode, seed)
-    if len(blocks) < n_nodes:
-        blocks = list(blocks) + [-1] * (n_nodes - len(blocks))
+    edgecut, blocks = call_kahip(xadj, adjncy, adjcwgt, vwgt, nblocks, imbalance, kahip_mode, seed)
+    print("DEBUG: m =", nblocks)
+    print("DEBUG: imbalance =", imbalance)
+    if len(blocks) < nodes:
+        blocks = list(blocks) + [-1] * (nodes - len(blocks))
     else:
-        blocks = list(blocks)[:n_nodes]
+        blocks = list(blocks)[:nodes]
 
     parts_map = defaultdict(list)
     for node_id, part in enumerate(blocks):
         parts_map[int(part)].append(node_id)
-
-    if write_prefix:
-        p1 = f"{write_prefix}_partitions.txt"
-        with open(p1, "w") as f:
-            for node_id, part in enumerate(blocks):
-                f.write(f"{node_id},{part}\n")
-        p2 = f"{write_prefix}_inverted.csv"
-        with open(p2, "w") as f:
-            for part in sorted(parts_map.keys()):
-                nodes = parts_map[part]
-                f.write(",".join([str(part)] + [str(n) for n in nodes]) + "\n")
 
     return blocks, dict(parts_map), {"edgecut": edgecut, "xadj": xadj, "adjncy": adjncy, "adjcwgt": adjcwgt, "vwgt": vwgt}

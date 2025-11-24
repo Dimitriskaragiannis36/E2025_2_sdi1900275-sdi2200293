@@ -34,17 +34,6 @@ def main():
     args = parser.parse_args()
 
     # ------------------------------------------------------
-    #  ΑΥΤΟΜΑΤΗ ΑΝΙΧΝΕΥΣΗ ANN EXECUTABLE (χωρίς flag)
-    # ------------------------------------------------------
-    ann_exec = autodetect_exec()
-    if ann_exec is None:
-        print("ERROR: Could not locate the ANN 'search' executable.")
-        print("Make sure it exists (e.g., ./bin/search).")
-        exit(1)
-
-    print(f"✔ Using ANN executable from nlsh_build.py: {ann_exec}")
-
-    # ------------------------------------------------------
     #           Πλήρης κλήση pipeline
     # ------------------------------------------------------
     build_pipeline(

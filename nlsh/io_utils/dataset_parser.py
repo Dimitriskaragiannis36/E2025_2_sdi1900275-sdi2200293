@@ -67,15 +67,17 @@ def load_sift(path: str, max_vectors: int = -1, expected_dim: int = 128):
     return np.vstack(vectors).astype(np.float32)
 
 
-def load_dataset(dataset_type: str, split: str = "input",
-                 max_items: int = -1, normalize_mnist: bool = True):
+def load_dataset(path: str, dataset_type: str,
+                 max_items, normalize_mnist: bool = False):
 
+    path = Path(path)
     dataset_type_l = dataset_type.lower()
-    path = Path("data") / dataset_type_l / f"{split}.dat"
 
     if dataset_type_l == "mnist":
-        return load_mnist(path, max_images=max_items, normalize=normalize_mnist)
+        return load_mnist(path, max_images = max_items, normalize=normalize_mnist)
+
     elif dataset_type_l == "sift":
-        return load_sift(path, max_vectors=max_items)
+        return load_sift(path, max_vectors = max_items)
+
     else:
         raise ValueError(f"Unknown dataset type: {dataset_type}")

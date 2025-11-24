@@ -3,25 +3,41 @@ import torch.nn as nn
 import torch.optim as optim
 
 class MLPClassifier(nn.Module):
-    def __init__(self, in_dim, out_dim):
+    def __init__(self, in_dim, out_dim, layers, nodes):
+        """
+        in_dim  : διαστάσεις εισόδου
+        out_dim : αριθμός blocks (labels)
+        layers  : συνολικός αριθμός layers του MLP
+        nodes   : νευρώνες ανά hidden layer
+        """
+        print("DEBUG: layers =", layers)
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(in_dim, 512),
-            nn.ReLU(),
-            nn.Linear(512, 512),
-            nn.ReLU(),
-            nn.Linear(512, out_dim)
-        )
+
+        modules = []
+        input_dim = in_dim
+
+        #χτίζουμε (layers - 1) hidden layers
+        #π.χ. layers=3 -> 2 hidden + 1 output
+        for _ in range(layers - 1):
+            modules.append(nn.Linear(input_dim, nodes))
+            modules.append(nn.ReLU())
+            input_dim = nodes
+
+        #τελικό output layer
+        modules.append(nn.Linear(input_dim, out_dim))
+
+        self.net = nn.Sequential(*modules)
 
     def forward(self, x):
         return self.net(x)
 
 
-def train(model, dataloader, epochs=10, lr=1e-3, device="cpu"):
+def train(model, dataloader, epochs, lr, device):
     model.to(device)
-    opt = optim.Adam(model.parameters(), lr=lr)
+    print("DEBUG: lr =", lr)
+    opt = optim.Adam(model.parameters(), lr)
     loss_fn = nn.CrossEntropyLoss()
-
+    print("DEBUG: epochs =", epochs)
     for epoch in range(epochs):
         model.train()
         total_loss = 0.0

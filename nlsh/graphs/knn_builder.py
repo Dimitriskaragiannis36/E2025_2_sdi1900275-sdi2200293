@@ -15,7 +15,7 @@ def run_ann_knn(dataset_type, k, method="ivfflat",
         raise ValueError(f"Unknown dataset type: {dataset_type}")
 
     if input_path is None:
-        input_path = Path("data") / dataset_type / "input.dat"
+        raise ValueError("input_path cannot be None — build_pipeline must pass the dataset file.")
     input_path = Path(input_path).resolve()
 
     output_knn = Path(f"knn_graph_{dataset_type}.csv").resolve()
@@ -44,7 +44,7 @@ def run_ann_knn(dataset_type, k, method="ivfflat",
         "-N", str(k),
         "-type", dataset_type,
         method_flag,
-        "-range", "false",
+        "-range", "true",
         "-seed", "1"
     ] + METHOD_PARAMS[method]
 
@@ -68,13 +68,44 @@ def run_ann_knn(dataset_type, k, method="ivfflat",
     return str(output_knn)
 
 
-def build_and_load_knn_graph(dataset_type, k=10, method="ivfflat",
-                             ann_exec="./bin/search", input_path=None):
+def build_and_load_knn_graph(
+    dataset_type,
+    k,
+    method,
+    ann_exec,
+    input_path,
+    csv_path
+    ):
+
+    """
+    Αν csv_path != None → φορτώνουμε απευθείας το αρχείο
+    Αν csv_path == None → τρέχει ANN για να παράγει νέο CSV
+    """
+
+    # ------------------------------------------
+    # MODE B: Έχω ήδη CSV, απλά κάνε load
+    # ------------------------------------------
+    if csv_path is not None:
+        print(f" Loading existing kNN CSV: {csv_path}")
+        graph = load_knn_graph_from_csv(csv_path)
+
+        if not graph:
+            raise ValueError("KNN graph is empty — CSV may be corrupt.")
+        return graph, csv_path
+
+    # ------------------------------------------
+    # MODE A: Κανονικό ANN mode
+    # ------------------------------------------
+    print("=== Running ANN KNN Builder ===")
+    print("DEBUG: knn number =", k)
 
     csv_path = run_ann_knn(dataset_type, k, method, ann_exec, input_path)
+    print(f"✔ ANN produced CSV: {csv_path}")
+
     graph = load_knn_graph_from_csv(csv_path)
 
     if not graph:
         raise ValueError("KNN graph is empty — ANN executable may have failed.")
 
     return graph, csv_path
+
