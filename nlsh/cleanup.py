@@ -10,10 +10,11 @@ for csv_file in root.rglob("*.csv"):
     print(f"Deleting {csv_file}")
     csv_file.unlink()
 
-#διαγράφει όλα τα output*.txt αρχεία
-for output_txt in root.rglob("output*.txt"):
-    print(f"Deleting {output_txt}")
-    output_txt.unlink()
+#διαγράφει όλα τα output subfolders με περιεχόμενά τους
+for output_dir in root.rglob("output"):
+    if output_dir.is_dir():
+        print(f"Deleting folder {output_dir}")
+        shutil.rmtree(output_dir)
 
 #διαγράφει όλα τα nlsh_index subfolders με περιεχόμενά τους
 for nlsh_index_dir in root.rglob("nlsh_index"):
