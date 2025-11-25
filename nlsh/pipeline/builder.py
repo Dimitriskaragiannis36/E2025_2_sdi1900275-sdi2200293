@@ -64,6 +64,8 @@ def build_pipeline(
     meta["dim"] = X.shape[1]
     meta["n"] = len(X)
     meta["nblocks"] = nblocks
+    meta["layers"] = layers
+    meta["nodes"] = nodes
     print("DEBUG: len(X) =", len(X))
     print("DEBUG: len(blocks) =", len(blocks))
 
