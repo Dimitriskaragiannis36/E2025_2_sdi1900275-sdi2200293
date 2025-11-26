@@ -27,14 +27,7 @@ def select_top_T_bins(all_probs, T):
 
 
 def collect_candidates(selected_bins, inverted_index):
-    """
-    STEP 3: From the selected T bins per query, collect all candidate point IDs
-    using the inverted index (loaded from inverted.csv).
-    
-    selected_bins: shape (num_queries, T)
-    inverted_index: dict[int, list[int]]
-    """
-
+    """STEP 3: συλλογή υποψηφίων από τους επιλεγμένους κάδους."""
     all_candidates = []
 
     for bins_for_query in selected_bins:
@@ -46,3 +39,50 @@ def collect_candidates(selected_bins, inverted_index):
 
     return all_candidates
 
+
+def exact_search(X, Q, candidate_lists, R, N, range_mode=True):
+    #Μετατροπή σε numpy arrays αν χρειάζεται
+    if hasattr(X, "numpy"):
+        X = X.numpy()
+    if hasattr(Q, "numpy"):
+        Q = Q.numpy()
+
+    results = []
+
+    for qi, q in enumerate(Q):
+        cand = candidate_lists[qi]
+        if not cand:
+            results.append([])   #όχι υποψήφιοι
+            continue
+
+        pts = X[cand]                            #σχήμα [num_candidates, dim]
+        diff = pts - q                           #απόσταση από το query
+        dists = np.sum(diff * diff, axis=1)      #ευκλείδεια απόσταση στο τετράγωνο
+
+        if range_mode:
+            #κρατάμε μόνο όσους έχουν dist <= R
+            mask = dists <= R
+            kept_ids = np.array(cand)[mask]
+            kept_dists = dists[mask]
+
+            #ταξινόμηση κατά απόσταση
+            order = np.argsort(kept_dists)
+            final_ids = kept_ids[order].tolist()
+            final_dists = kept_dists[order].tolist()
+        else:
+            #top-N κοντινότεροι
+            if len(dists) > N:
+                top_idx = np.argpartition(dists, N)[:N]
+            else:
+                top_idx = np.arange(len(dists))
+
+            #ταξινόμηση κατά απόσταση
+            order = np.argsort(dists[top_idx])
+            final = top_idx[order]
+
+            final_ids = np.array(cand)[final].tolist()
+            final_dists = dists[top_idx][order].tolist()
+
+        results.append(list(zip(final_ids, final_dists)))
+
+    return results

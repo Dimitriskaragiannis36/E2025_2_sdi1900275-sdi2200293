@@ -3,7 +3,8 @@ import numpy as np
 from search.nlsh_steps import (
     compute_probabilities,
     select_top_T_bins,
-    collect_candidates
+    collect_candidates,
+    exact_search
 )
 
 
@@ -29,6 +30,34 @@ def run_nlsh_search(model, X, Q, meta, partitions, inverted, args, outdir: Path)
         for i, cand in enumerate(candidates):
             f.write(f"Query {i}: {','.join(map(str, cand))}\n")
     print("✓ Step 3 complete.")
+
+    #βήμα 4
+    print("\nRunning STEP 4: Exact Search")
+
+    range_mode = (args.range.lower() == "true")
+
+    results = exact_search(
+        X,
+        Q,
+        candidates,
+        R=args.R,
+        N=args.N,
+        range_mode=range_mode
+    )
+
+    #αποθήκευση αποτελεσμάτων
+    out_file = outdir / "results.txt"
+    with open(out_file, "w") as f:
+        for qi, res in enumerate(results):
+            line = f"Query {qi}: "
+            if range_mode:
+                #μορφή: id:dist,...
+                line += ",".join(f"{pid}:{dist:.4f}" for pid, dist in res)
+            else:
+                line += ",".join(f"{pid}:{dist:.4f}" for pid, dist in res)
+            f.write(line + "\n")
+
+    print(f"✓ Step 4 complete. Results saved to {out_file}")
 
     return {
         "probs": all_probs,
