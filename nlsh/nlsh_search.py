@@ -1,17 +1,15 @@
 import argparse
 from pathlib import Path
-import numpy as np
 
 from search.loader import load_model, load_index_files, load_query, load_dataset
-from search.nlsh_steps import compute_probabilities, select_top_T_bins
-
+from search.runner import run_nlsh_search
 
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-d", "--data", required=True, help="input.dat")
-    parser.add_argument("-q", "--query", required=True, help="query.dat")
-    parser.add_argument("-i", "--index", required=True, help="index directory")
+    parser.add_argument("-d", "--data", required=True)
+    parser.add_argument("-q", "--query", required=True)
+    parser.add_argument("-i", "--index", required=True)
     parser.add_argument("-o", "--output", required=True)
 
     parser.add_argument("-type", required=True, choices=["mnist", "sift"])
@@ -46,24 +44,7 @@ def main():
     print(f"Output directory: {final_out_dir}")
     # ----------------------------------------------------------------------
 
-    print("Running STEP 1: prediction for query")
-  
-    all_probs = compute_probabilities(model, Q)
-
-    #αποθήκευση αποτελεσμάτων βήματος 1
-    step1_file = final_out_dir / "probs.txt"
-    np.savetxt(step1_file, all_probs, fmt="%.6f")
-    print(f"✓ All probabilities saved to {step1_file}")
-
-    print("\nRunning STEP 2: Multi-Probe bin selection")
-
-    bins, probs = select_top_T_bins(all_probs, args.T)
-
-    np.savetxt(final_out_dir / "bins.txt", bins, fmt="%d")
-    np.savetxt(final_out_dir / "bins_probs.txt", probs, fmt="%.6f")
-
-    print("✓ Step 2 complete.")
-
+    run_nlsh_search(model, X, Q, meta, partitions, inverted, args, final_out_dir)
 
 
 if __name__ == "__main__":
