@@ -1,4 +1,5 @@
 import numpy as np
+import time
 from search.predictor import predict_bins
 
 
@@ -48,12 +49,16 @@ def exact_search(X, Q, candidate_lists, R, N, range_mode=True):
         Q = Q.numpy()
 
     results = []
+    approx_times = [] 
 
     for qi, q in enumerate(Q):
         cand = candidate_lists[qi]
         if not cand:
             results.append([])   #όχι υποψήφιοι
+            approx_times.append(0.0)
             continue
+        
+        t0 = time.time() #μέτρηση χρόνου αναζήτησης
 
         pts = X[cand]                            #σχήμα [num_candidates, dim]
         diff = pts - q                           #απόσταση από το query
@@ -83,6 +88,9 @@ def exact_search(X, Q, candidate_lists, R, N, range_mode=True):
             final_ids = np.array(cand)[final].tolist()
             final_dists = dists[top_idx][order].tolist()
 
+            t1 = time.time()
+            approx_times.append(t1 - t0)
+
         results.append(list(zip(final_ids, final_dists)))
 
-    return results
+    return results, approx_times

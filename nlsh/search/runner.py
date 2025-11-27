@@ -36,7 +36,7 @@ def run_nlsh_search(model, X, Q, meta, partitions, inverted, args, outdir: Path)
 
     range_mode = (args.range.lower() == "true")
 
-    results = exact_search(
+    results, approx_times = exact_search(
         X,
         Q,
         candidates,
@@ -58,6 +58,26 @@ def run_nlsh_search(model, X, Q, meta, partitions, inverted, args, outdir: Path)
             f.write(line + "\n")
 
     print(f"✓ Step 4 complete. Results saved to {out_file}")
+
+    #βήμα 5
+    print("\nRunning STEP 5: Writing final output")
+
+    from search.output_writer import write_output_file
+
+    final_output_path = outdir / "final_output.txt"
+
+    write_output_file(
+        out_path=final_output_path,
+        X=X,
+        Q=Q,
+        approx_results=results,
+        N=args.N,
+        R=args.R,
+        method_name="Neural LSH",
+        approx_times=approx_times
+    )
+
+    print(f"✓ Step 5 complete. Final output written to {final_output_path}")
 
     return {
         "probs": all_probs,

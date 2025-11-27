@@ -32,8 +32,8 @@ def main():
     model = load_model(index_dir / "model.pth", meta)
 
     print("=== Loading dataset & query ===")
-    X = load_dataset(args.data, args.type)
-    Q = load_query(args.query, args.type)
+    X = load_dataset(args.data, args.type, max_items= 10000)
+    Q = load_query(args.query, args.type, max_items= 100)
 
     # ----------------------------------------------------------------------
     #δημιουργία φακέλου εξόδου

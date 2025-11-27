@@ -40,18 +40,24 @@ def load_model(model_path, meta):
     model.eval()
     return model
 
-def load_dataset(path, dataset_type):
-    return dp_load_dataset(path, dataset_type, max_items=-1)
+
+def load_dataset(path, dataset_type, max_items):
+    return dp_load_dataset(path, dataset_type, max_items)
 
 
-def load_query(path, dataset_type=None):
+def load_query(path, dataset_type, max_items):
     if dataset_type.lower() == "mnist":
-        #διαβάζουμε όλα τα queries
         arr = np.fromfile(path, dtype=np.uint8)
         magic, num, rows, cols = arr[:16].view(">u4")
         dim = rows * cols
         data = arr[16:].reshape(num, dim).astype(np.float32) / 255.0
+        if max_items > 0:
+            data = data[:max_items]
         return torch.tensor(data, dtype=torch.float32)
+
     elif dataset_type.lower() == "sift":
-        #για SIFT χρησιμοποιούμε ήδη load_dataset
-        return torch.tensor(load_dataset(path, "sift"), dtype=torch.float32)
+        data = load_dataset(path, "sift", max_items)
+        if max_items > 0:
+            data = data[:max_items]
+        return torch.tensor(data, dtype=torch.float32)
+
