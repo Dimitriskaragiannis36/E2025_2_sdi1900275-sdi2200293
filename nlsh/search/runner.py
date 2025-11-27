@@ -8,7 +8,7 @@ from search.nlsh_steps import (
 )
 
 
-def run_nlsh_search(model, X, Q, meta, partitions, inverted, args, outdir: Path):
+def run_nlsh_search(model, X, Q, inverted, args, outdir):
 
     #βήμα 1
     print("Running STEP 1: prediction for query")
@@ -36,26 +36,34 @@ def run_nlsh_search(model, X, Q, meta, partitions, inverted, args, outdir: Path)
 
     range_mode = (args.range.lower() == "true")
 
-    results, approx_times = exact_search(
+    knn_results, range_results, approx_times = exact_search(
         X,
         Q,
         candidates,
-        R=args.R,
-        N=args.N,
-        range_mode=range_mode
+        args.R,
+        args.N,
+        range_mode
     )
 
     #αποθήκευση αποτελεσμάτων
     out_file = outdir / "results.txt"
     with open(out_file, "w") as f:
-        for qi, res in enumerate(results):
-            line = f"Query {qi}: "
+        for qi in range(len(Q)):
+            f.write(f"Query {qi}:\n")
+
+            #KNN (πάντα)
+            f.write("KNN: ")
+            f.write(",".join(f"{pid}:{dist:.4f}" for pid, dist in knn_results[qi]))
+            f.write("\n")
+
+            #RANGE (αν ενεργό)
             if range_mode:
-                #μορφή: id:dist,...
-                line += ",".join(f"{pid}:{dist:.4f}" for pid, dist in res)
-            else:
-                line += ",".join(f"{pid}:{dist:.4f}" for pid, dist in res)
-            f.write(line + "\n")
+                f.write("RANGE: ")
+                f.write(",".join(f"{pid}:{dist:.4f}" for pid, dist in range_results[qi]))
+                f.write("\n")
+            
+            f.write("\n")
+
 
     print(f"✓ Step 4 complete. Results saved to {out_file}")
 
@@ -67,15 +75,18 @@ def run_nlsh_search(model, X, Q, meta, partitions, inverted, args, outdir: Path)
     final_output_path = outdir / "final_output.txt"
 
     write_output_file(
-        out_path=final_output_path,
-        X=X,
-        Q=Q,
-        approx_results=results,
-        N=args.N,
-        R=args.R,
-        method_name="Neural LSH",
-        approx_times=approx_times
+        final_output_path,
+        X,
+        Q,
+        knn_results,
+        range_results,
+        args.N,
+        args.R,
+        "Neural LSH",
+        approx_times,
+        range_mode
     )
+
 
     print(f"✓ Step 5 complete. Final output written to {final_output_path}")
 

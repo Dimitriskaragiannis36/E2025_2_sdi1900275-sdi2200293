@@ -25,10 +25,12 @@ def full_search_true_neighbors(X, q, N):
 def write_output_file(
     out_path, 
     X, Q,
-    approx_results,    #λίστα λιστών με (id, απόσταση)
+    knn_results,       #λίστα λιστών με (id, dist) από το STEP 4
+    range_results,     #λίστα λιστών με (id, dist) ή []
     N, R,
-    method_name="Neural LSH",
-    approx_times=None
+    method_name,
+    approx_times,
+    range_mode
 ):
     if approx_times is None:
         approx_times = []
@@ -46,7 +48,7 @@ def write_output_file(
             f.write(f"\nQuery: {qi}\n")
 
             #προσεγγιστικοί γείτονες
-            approx_neighbors = approx_results[qi][:N]
+            approx_neighbors = knn_results[qi][:N]
             approx_ids = [p[0] for p in approx_neighbors]
             approx_dists = [p[1] for p in approx_neighbors]
 
@@ -65,8 +67,7 @@ def write_output_file(
                     nn_id = -1
                     nn_dist = float("inf")
 
-                #πραγματικός γείτονας
-                true_id = true_ids[i]
+                #πραγματική απόσταση
                 true_dist = true_dists[i]
 
                 f.write(f"Nearest neighbor-{i+1}: {nn_id}\n")
@@ -74,10 +75,11 @@ def write_output_file(
                 f.write(f"distanceTrue: {true_dist}\n")
 
             #γείτονες εντός R
-            f.write("R-near neighbors:\n")
-            r_ids = np.where(all_true_dists <= R)[0].tolist()
-            for rid in r_ids:
-                f.write(f"{rid}\n")
+            if range_mode:
+                f.write("R-near neighbors:\n")
+                ann_range = range_results[qi]
+                for (rid, _) in ann_range:
+                    f.write(f"{rid}\n")
 
             #μετρικές
             if approx_dists:

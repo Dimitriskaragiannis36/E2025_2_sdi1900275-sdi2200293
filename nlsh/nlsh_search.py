@@ -22,11 +22,12 @@ def main():
 
     if args.R is None:
         args.R = 2000.0 if args.type == "mnist" else 2800.0
-
+    
     index_dir = Path(args.index)
+    
 
     print("=== Loading index files ===")
-    meta, partitions, inverted = load_index_files(index_dir)
+    meta, inverted = load_index_files(index_dir)
 
     print("=== Loading model ===")
     model = load_model(index_dir / "model.pth", meta)
@@ -44,7 +45,7 @@ def main():
     print(f"Output directory: {final_out_dir}")
     # ----------------------------------------------------------------------
 
-    run_nlsh_search(model, X, Q, meta, partitions, inverted, args, final_out_dir)
+    run_nlsh_search(model, X, Q, inverted, args, final_out_dir)
 
 
 if __name__ == "__main__":

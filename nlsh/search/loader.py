@@ -7,36 +7,34 @@ from io_utils.dataset_parser import load_dataset as dp_load_dataset
 
 
 def load_index_files(index_dir):
+    print("DEBUG:  index_path=", index_dir)
     index_dir = Path(index_dir)
+
+    #meta.json
     meta = json.load(open(index_dir / "meta.json"))
 
-    partitions = []
-    with open(index_dir / "partitions.txt", "r") as f:
-        for line in f:
-            if line.strip():
-                _, part = line.strip().split(",")
-                partitions.append(int(part))
-
+    #inverted.csv
     inverted = {}
     with open(index_dir / "inverted.csv", "r") as f:
         for line in f:
-            if line.strip():
-                nums = list(map(int, line.strip().split(",")))
-                part = nums[0]
-                inverted[part] = nums[1:]
+            line = line.strip()
+            if not line:
+                continue
+            nums = list(map(int, line.split(",")))
+            part = nums[0]
+            inverted[part] = nums[1:]
 
-    return meta, partitions, inverted
+    return meta, inverted
 
 
 def load_model(model_path, meta):
-    from ml.classifier import MLPClassifier
     model = MLPClassifier(
         in_dim=meta["dim"],
         out_dim=meta["nblocks"],
         layers=meta["layers"],
         nodes=meta["nodes"]
     )
-    model.load_state_dict(torch.load(model_path, map_location="cpu", weights_only=True))
+    model.load_state_dict(torch.load(model_path,"cpu", weights_only=True))
     model.eval()
     return model
 
