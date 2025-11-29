@@ -1,5 +1,6 @@
-from pathlib import Path
 import numpy as np
+
+from search.output_writer import write_output_file
 from search.nlsh_steps import (
     compute_probabilities,
     select_top_T_bins,
@@ -69,8 +70,6 @@ def run_nlsh_search(model, X, Q, inverted, args, outdir):
 
     #βήμα 5
     print("\nRunning STEP 5: Writing final output")
-
-    from search.output_writer import write_output_file
 
     final_output_path = outdir / "final_output.txt"
 

@@ -76,7 +76,9 @@ def build_pipeline(
 
     model = MLPClassifier(X.shape[1], nblocks, layers, nodes)
 
-    train(model, loader, epochs, lr=lr, device="cpu")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    train(model, loader, epochs, lr=lr, device=device)
+    model.to("cpu")   #για αποθήκευση
 
     torch.save(model.state_dict(), out_dir / "model.pth")
 

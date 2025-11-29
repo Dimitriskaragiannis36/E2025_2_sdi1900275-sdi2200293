@@ -34,7 +34,8 @@ def load_model(model_path, meta):
         layers=meta["layers"],
         nodes=meta["nodes"]
     )
-    model.load_state_dict(torch.load(model_path,"cpu", weights_only=True))
+    state = torch.load(model_path, map_location="cpu", weights_only=True)
+    model.load_state_dict(state)
     model.eval()
     return model
 

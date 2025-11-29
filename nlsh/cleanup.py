@@ -22,4 +22,10 @@ for nlsh_index_dir in root.rglob("nlsh_index"):
         print(f"Deleting folder {nlsh_index_dir}")
         shutil.rmtree(nlsh_index_dir)
 
+#διαγράφει όλα τα plots subfolders με περιεχόμενά τους
+for plots_dir in root.rglob("plots"):
+    if plots_dir.is_dir():
+        print(f"Deleting folder {plots_dir}")
+        shutil.rmtree(plots_dir)
+
 print("Cleanup completed.")
