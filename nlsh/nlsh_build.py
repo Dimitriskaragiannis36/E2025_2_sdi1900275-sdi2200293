@@ -1,10 +1,9 @@
-import argparse
-from io_utils.exec_finder import autodetect_exec
-from pipeline.builder import build_pipeline
+import argparse #για την ανάλυση των ορισμάτων της γραμμής εντολών
+from pipeline.builder import build_pipeline #για την κατασκευή pipeline ευρετηρίου
 
-
+#κύρια συνάρτηση
 def main():
-
+    #ανάλυση ορισμάτων γραμμής εντολών
     parser = argparse.ArgumentParser(description="NLSH build pipeline")
 
     # --- βασικά flags της εκφώνησης ---
@@ -31,7 +30,7 @@ def main():
     parser.add_argument("--lr", type=float, default=0.001)
     parser.add_argument("--seed", type=int, default=1)
 
-    args = parser.parse_args()
+    args = parser.parse_args() #ανάλυση ορισμάτων
 
     # ------------------------------------------------------
     #           Πλήρης κλήση pipeline
@@ -50,8 +49,8 @@ def main():
         batch_size=args.batch_size,
         lr=args.lr,
         seed=args.seed,
-    )
+    ) #κατασκευή pipeline ευρετηρίου
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": #εκτέλεση κύριας συνάρτησης
     main()
