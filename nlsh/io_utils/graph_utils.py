@@ -16,6 +16,7 @@ def load_knn_graph_from_csv(path: str) -> Dict[int, List[int]]:
 
             node = int(row[0]) #ανάγνωση του αναγνωριστικού κόμβου
             neighbors = list(map(int, row[2:])) #ανάγνωση των γειτόνων
+            graph[node] = neighbors #προσθήκη στο γράφο
 
     return graph
 

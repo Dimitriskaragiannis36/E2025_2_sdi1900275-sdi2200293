@@ -13,7 +13,7 @@ def full_search_true_neighbors(X, q, N):
         X = X.numpy()
 
     diff = X - q #numpy array
-    dists = np.sum(diff * diff, axis=1)   #numpy array
+    dists = np.sqrt(np.sum(diff * diff, axis=1)) #numpy array
 
     order = np.argsort(dists) #numpy array
     top_ids = order[:N].tolist() #λίστα με τα N πρώτα ids
@@ -54,9 +54,9 @@ def write_output_file(
             approx_dists = [p[1] for p in approx_neighbors] #αποστάσεις
 
             #πραγματικοί γείτονες
-            t0 = time.time() #χρόνος έναρξης
+            t0 = time.perf_counter() #χρόνος έναρξης
             true_ids, true_dists = full_search_true_neighbors(X, q, N) #πραγματικοί γείτονες
-            t1 = time.time() #χρόνος λήξης
+            t1 = time.perf_counter() #χρόνος λήξης
             true_times.append(t1 - t0) #αποθήκευση χρόνου πλήρους αναζήτησης
 
             #δικλείδα ασφαλείας

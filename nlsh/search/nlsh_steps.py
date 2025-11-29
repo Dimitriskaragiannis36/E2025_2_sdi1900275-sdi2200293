@@ -63,12 +63,12 @@ def exact_search(X, Q, candidate_lists, R, N, range_mode):
             range_results.append([]) #κανένας υποψήφιος
             approx_times.append(0.0) #μηδενικός χρόνος
             continue
-        t0 = time.time() #μέτρηση χρόνου αναζήτησης
+        t0 = time.perf_counter() #μέτρηση χρόνου αναζήτησης
         pts = X[cand]                            #σχήμα [num_candidates, dim]
         diff = pts - q                           #απόσταση από το query
         dists = np.sqrt(np.sum(diff * diff, axis=1))      #ευκλείδεια απόσταση 
 
-        t1 = time.time() #τέλος μέτρησης χρόνου
+        t1 = time.perf_counter() #τέλος μέτρησης χρόνου
         approx_times.append(t1 - t0) #αποθηκεύουμε τον χρόνο
 
         if len(dists) > N:
