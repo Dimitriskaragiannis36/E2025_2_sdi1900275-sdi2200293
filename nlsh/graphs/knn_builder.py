@@ -1,13 +1,13 @@
-import subprocess
-from pathlib import Path
-from io_utils.graph_utils import load_knn_graph_from_csv
+import subprocess #για την εκτέλεση εξωτερικών εντολών
+from pathlib import Path #για τη διαχείριση διαδρομών αρχείων
+from io_utils.graph_utils import load_knn_graph_from_csv #για τη φόρτωση kNN γραφήματος από CSV
 
-
+#εκτέλεση ANN για την κατασκευή kNN γραφήματος
 def run_ann_knn(dataset_type, k, method="ivfflat",
                 ann_exec="./bin/search", input_path=None,
-                knn_graph=True):
+                knn_graph=True): #αν θέλουμε να παραχθεί και το knn γραφημα
 
-    ann_exec = Path(ann_exec).resolve()
+    ann_exec = Path(ann_exec).resolve() #μετατροπή σε απόλυτη διαδρομή
     if not ann_exec.exists():
         raise FileNotFoundError(f"Executable not found: {ann_exec}")
 
@@ -16,18 +16,18 @@ def run_ann_knn(dataset_type, k, method="ivfflat",
 
     if input_path is None:
         raise ValueError("input_path cannot be None — build_pipeline must pass the dataset file.")
-    input_path = Path(input_path).resolve()
+    input_path = Path(input_path).resolve() #μετατροπή σε απόλυτη διαδρομή
 
-    output_knn = Path(f"knn_graph_{dataset_type}.csv").resolve()
+    output_knn = Path(f"knn_graph_{dataset_type}.csv").resolve() #αποθήκευση του kNN γραφήματος σε CSV
 
     METHOD_PARAMS = {
         "lsh":       ["-k", "4", "-L", "5", "-w", "4.0"],
         "hypercube": ["-kproj", "14", "-w", "4", "-M", "10", "-probes", "2"],
         "ivfflat":   ["-kclusters", "50", "-nprobe", "5"],
         "ivfpq":     ["-kclusters", "50", "-nprobe", "5", "-M", "16", "-nbits", "8"]
-    }
+    } #παράμετροι για κάθε μέθοδο
 
-    if method not in METHOD_PARAMS:
+    if method not in METHOD_PARAMS: #έλεγχος έγκυρης μεθόδου
         raise ValueError(f"Unknown ANN method: {method}")
 
     method_flag = {
@@ -35,7 +35,7 @@ def run_ann_knn(dataset_type, k, method="ivfflat",
         "hypercube": "-hypercube",
         "ivfflat": "-ivfflat",
         "ivfpq": "-ivfpq"
-    }[method]
+    }[method] #αντιστοίχιση μεθόδου σε σημαία εντολής
 
     cmd = [
         str(ann_exec),
@@ -46,9 +46,9 @@ def run_ann_knn(dataset_type, k, method="ivfflat",
         method_flag,
         "-range", "true",
         "-seed", "1"
-    ] + METHOD_PARAMS[method]
+    ] + METHOD_PARAMS[method] #προσθήκη παραμέτρων μεθόδου
 
-    if knn_graph:
+    if knn_graph: #θέλουμε να παραχθεί kNN γράφημα
         cmd.append("-knngraph")
 
     print("Running:", " ".join(cmd))
@@ -67,7 +67,7 @@ def run_ann_knn(dataset_type, k, method="ivfflat",
 
     return str(output_knn)
 
-
+#κατασκευή και φόρτωση kNN γραφήματος
 def build_and_load_knn_graph(
     dataset_type,
     k,
@@ -87,7 +87,7 @@ def build_and_load_knn_graph(
     # ------------------------------------------
     if csv_path is not None:
         print(f" Loading existing kNN CSV: {csv_path}")
-        graph = load_knn_graph_from_csv(csv_path)
+        graph = load_knn_graph_from_csv(csv_path) #φόρτωση kNN γραφήματος από CSV
 
         if not graph:
             raise ValueError("KNN graph is empty — CSV may be corrupt.")
@@ -99,10 +99,10 @@ def build_and_load_knn_graph(
     print("=== Running ANN KNN Builder ===")
     print("DEBUG: knn number =", k)
 
-    csv_path = run_ann_knn(dataset_type, k, method, ann_exec, input_path)
+    csv_path = run_ann_knn(dataset_type, k, method, ann_exec, input_path) #τρέχει ANN για να παράγει CSV
     print(f"✔ ANN produced CSV: {csv_path}")
 
-    graph = load_knn_graph_from_csv(csv_path)
+    graph = load_knn_graph_from_csv(csv_path) #φόρτωση kNN γραφήματος από CSV
 
     if not graph:
         raise ValueError("KNN graph is empty — ANN executable may have failed.")
