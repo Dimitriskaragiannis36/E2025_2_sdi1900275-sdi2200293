@@ -196,20 +196,20 @@ AF, Recall@N, χρόνους αναζήτησης
 Γράφουμε στην γραμμή εντολών:
 
 **BUILD**
-python3 nlsh_build.py     -d data/mnist/input.dat     -i nlsh_index/mnist     -type mnist     --knn 2     -m 100   --imbalance 0.03   --kahip_mode 2  --layers 3  --nodes 64    --epochs 10  --batch_size 128  --lr 0.001  --seed 1
+python3 nlsh_build.py     -d data/mnist/input.dat     -i nlsh_index/mnist     -type mnist     --knn 10     -m 100   --imbalance 0.03   --kahip_mode 2  --layers 3  --nodes 64    --epochs 10  --batch_size 128  --lr 0.001  --seed 1
 
 
-python3 nlsh_build.py     -d data/sift/input.dat     -i nlsh_index/sift     -type sift     --knn 2     -m 100     --imbalance 0.03   --kahip_mode 2  --layers 3  --nodes 64    --epochs 10  --batch_size 128  --lr 0.001  --seed 1
+python3 nlsh_build.py     -d data/sift/input.dat     -i nlsh_index/sift     -type sift     --knn 10     -m 100     --imbalance 0.03   --kahip_mode 2  --layers 3  --nodes 64    --epochs 10  --batch_size 128  --lr 0.001  --seed 1
 
 
 **Τα αποτελέσματα αποθηκεύονται στα αρχεία knn_graph*.csv καθώς και στον φάκελο nlsh_index**
 
 # -------------------------------------------------------------------------------------------------- 
 **SEARCH**
-python3 nlsh_search.py     -d data/mnist/input.dat     -q data/mnist/query.dat      -i nlsh_index/mnist     -o output    -type mnist     -N 1   -R  2000.0   -T 5    -range false
+python3 nlsh_search.py     -d data/mnist/input.dat     -q data/mnist/query.dat      -i nlsh_index/mnist     -o output    -type mnist     -N 1   -R  2000.0   -T 5    -range true
 
 
-python3 nlsh_search.py     -d data/sift/input.dat     -q data/sift/query.dat      -i nlsh_index/sift     -o output   -type sift    -N 1   -R 2800.0 -T 5    -range false
+python3 nlsh_search.py     -d data/sift/input.dat     -q data/sift/query.dat      -i nlsh_index/sift     -o output   -type sift    -N 1   -R 2800.0 -T 5    -range true
 
 
 
@@ -230,10 +230,10 @@ python3 plot_results.py
 **Για την πειραματική μελέτη**
 Τρέχουμε πρώτα: 
 
-python3 nlsh_build.py     -d data/mnist/input.dat     -i nlsh_index/mnist     -type mnist     --knn 2     -m 100   --imbalance 0.03   --kahip_mode 2  --layers 3  --nodes 64    --epochs 10  --batch_size 128  --lr 0.001  --seed 1
+python3 nlsh_build.py     -d data/mnist/input.dat     -i nlsh_index/mnist     -type mnist     --knn 10     -m 100   --imbalance 0.03   --kahip_mode 2  --layers 3  --nodes 64    --epochs 10  --batch_size 128  --lr 0.001  --seed 1
 
 
-python3 nlsh_build.py     -d data/sift/input.dat     -i nlsh_index/sift     -type sift     --knn 2     -m 100     --imbalance 0.03   --kahip_mode 2  --layers 3  --nodes 64    --epochs 10  --batch_size 128  --lr 0.001  --seed 1
+python3 nlsh_build.py     -d data/sift/input.dat     -i nlsh_index/sift     -type sift     --knn 10     -m 100     --imbalance 0.03   --kahip_mode 2  --layers 3  --nodes 64    --epochs 10  --batch_size 128  --lr 0.001  --seed 1
 
 ώστε να δημιουργηθούν τα .csv. 
 # Από εκεί και μετά με την κατάλληλη τροποποίηση στο αρχείο builder.py γραμμή 27:
@@ -242,6 +242,7 @@ python3 nlsh_build.py     -d data/sift/input.dat     -i nlsh_index/sift     -typ
 
 
 **ΠΡΟΣΟΧΗ το cleanup.py σβήνει και τα .csv για καθαρότητα**
+# Για σβήσιμο όλων γράφουμε python3 cleanup.py
 
 
 ## ε) πλήρη στοιχεία των φοιτητών που ανέπτυξαν το πρόγραμμα
