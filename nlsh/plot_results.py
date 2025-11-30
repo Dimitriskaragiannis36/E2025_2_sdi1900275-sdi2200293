@@ -4,6 +4,7 @@ import pandas as pd #για διαχείριση δεδομένων
 import matplotlib.pyplot as plt #για γραφήματα
 import seaborn as sns #για βελτιωμένα γραφήματα
 from matplotlib.backends.backend_pdf import PdfPages #για αποθήκευση πολλαπλών γραφημάτων σε PDF
+from openpyxl import load_workbook #για εργασία με αρχεία Excel
 
 #αρχεία αποτελεσμάτων
 MNIST_FILE = "output/mnist/final_output.txt"
@@ -61,7 +62,27 @@ print(df.to_string(index=False)) #εκτύπωση πίνακα αποτελεσ
 df.to_csv(f"{PLOTS_DIR}/results.csv", index=False)
 
 try:
-    df.to_excel(f"{PLOTS_DIR}/results.xlsx", index=False) #αποθήκευση σε Excel αν είναι εγκατεστημένο το openpyxl
+
+    excel_path = f"{PLOTS_DIR}/results.xlsx" #διαδρομή αποθήκευσης Excel αρχείου
+
+    #γράψιμο Excel αρχείου όπως πριν
+    df.to_excel(excel_path, index=False)
+
+    #ανοίγουμε το υπάρχον Excel
+    wb = load_workbook(excel_path)
+    ws = wb.active
+
+    #format για 4 δεκαδικά
+    fmt = "0.0000"
+
+    #για κάθε κελί στους αριθμητικούς πίνακες του DataFrame
+    for row in ws.iter_rows(min_row=2):   #ξεκινάμε από τη 2η γραμμή (δεδομένα)
+        for cell in row:
+            if isinstance(cell.value, float):
+                cell.number_format = fmt #εφαρμογή format
+
+    wb.save(excel_path) #αποθήκευση αλλαγών
+
 except:
     print("WARNING: openpyxl not installed → Excel file not created.")
 
